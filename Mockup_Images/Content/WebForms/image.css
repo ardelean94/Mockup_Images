@@ -1,0 +1,36 @@
+﻿body {
+    margin: 20px 20px;
+}
+
+.image {
+    padding: 10px 10px;
+}
+
+.content {
+    padding-top: 20px;
+}
+
+.btn {
+    background-color: dodgerblue;
+    border: none;
+    border-radius: 20px;
+    color: white;
+    padding: 10px;
+    outline: none;
+}
+
+.btn:hover {
+    box-shadow: 5px 5px 5px rgb(133, 130, 130);
+}
+
+.btn-hidden{
+    visibility: hidden;
+}
+
+.circle {
+    margin: 10px;
+    height: 30px;
+    width: 30px;
+    background-color: #68CF68;
+    border-radius: 50%;
+}

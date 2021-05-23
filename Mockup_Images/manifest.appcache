@@ -1,0 +1,15 @@
+﻿CACHE MANIFEST
+# v1.0 : 20-05-2021
+CACHE:
+# pages
+Image.aspx
+# styles & scripts
+Content/WebForms/image.css
+Scripts/modernizr-2.8.3.js
+Scripts/WebForms/Images/image.js
+Scripts/dexie-3.0.3.js
+Scripts/browser-image-compression-1.0.13.js
+Scripts/jquery-3.4.1.js
+NETWORK:
+*
+

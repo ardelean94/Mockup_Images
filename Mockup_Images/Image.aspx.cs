@@ -1,12 +1,9 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
-using System.Web;
 using System.Web.Services;
-using System.Web.UI;
-using System.Web.UI.WebControls;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 public partial class Image : System.Web.UI.Page
 {
@@ -21,10 +18,17 @@ public partial class Image : System.Web.UI.Page
         TextWriter writer = null;
         try
         {
-            var filePath = Path.Combine(@"C:\Users\Alex\source\repos\indexedDB-dexie-demo-webSite\Mockup_Images\Mockup_Images\LocalDB\imageRecord.json");    
-            var contentsToWriteToFile = JsonConvert.DeserializeObject(imageData);
-            writer = new StreamWriter(filePath);
-            writer.Write(contentsToWriteToFile);
+            ////OLD WAY
+            //var filePath = Path.Combine(@"C:\Users\Alex\source\repos\indexedDB-dexie-demo-webSite\Mockup_Images\Mockup_Images\LocalDB\imageRecord", ".json");
+            //var contentsToWriteToFile = JsonConvert.DeserializeObject(imageData);
+            ////var contentsToWriteToFile = JsonSerializer.Deserialize<Images>(imageData);
+            //writer = new StreamWriter(filePath);
+            //writer.Write(contentsToWriteToFile);
+
+
+            Images images = System.Text.Json.JsonSerializer.Deserialize<Images>(imageData);
+            string filePath = @"C:\Users\Alex\source\repos\indexedDB-dexie-demo-webSite\Mockup_Images\Mockup_Images\LocalDB\imageRecord_" + images.Id.ToString() + ".json";
+            File.WriteAllText(filePath, imageData);
 
             return imageData;
         }

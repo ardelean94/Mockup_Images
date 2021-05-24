@@ -19,7 +19,7 @@ function initializeDB() {
     console.log('db initiliazed');
     db = new Dexie('db_test');
     db.version(1).stores({
-        images: '++id, createdDate, imageData',
+        images: '++Id, CreatedDate, ImageData',
     });
 }
 
@@ -39,13 +39,13 @@ async function compressImage(event) {
         console.log('compressedFile instanceof Blob', compressedImage instanceof Blob); // true
         console.log(`compressedFile size ${compressedImage.size / 1024 / 1024} MB`); // smaller than maxSizeMB
 
-        await saveImageToIndexedDB(compressedImage); // write your own logic
+        await saveImageToIndexedDB(compressedImage);
     } catch (error) {
         console.log(error);
     }
 }
 
-async function saveImageToIndexedDB(compressedImage) {
+function saveImageToIndexedDB(compressedImage) {
     const reader = new FileReader();
     reader.readAsBinaryString(compressedImage);
 
@@ -53,8 +53,8 @@ async function saveImageToIndexedDB(compressedImage) {
         const bits = e.target.result;
 
         const id = await db.images.add({
-            createdDate: Date.now(),
-            imageData: btoa(bits),
+            CreatedDate: new Date(),
+            ImageData: btoa(bits),
         });
         console.log(id);
         checkIndexedDbData();
@@ -63,8 +63,9 @@ async function saveImageToIndexedDB(compressedImage) {
 
 async function getImageFromIndexedDB() {
     await db.images.toArray()
-        .then(imageList => {
-            imageList.forEach(image => {
+        .then(imageArray => {
+            imageArray.forEach(image => {
+                //console.log(image);
                 drawImage('imagesInputArea', image);
             });
         })
@@ -77,9 +78,8 @@ async function getImageFromIndexedDB() {
 }
 
 function drawImage(elementLocation, imageObj) {
-    let imageSrc = "data:image/jpeg;base64," + imageObj.imageData;
+    let imageSrc = "data:image/jpeg;base64," + imageObj.ImageData;
 
-    //$("#imagesInputArea .table .tbody")
     $("#" + elementLocation + " .table .tbody").append(
         `
             <tr class="row"> 
@@ -100,42 +100,11 @@ function clearIndexedDB() {
         });
 }
 
-function clearScreen() {
-    clearIndexedDB();
-    checkIndexedDbData();
-    $("#imagesInputArea .table .tbody .row").remove();
-    $("#imagesOutputArea .table .tbody .row").remove();
-}
-
-async function saveImageToServerUsingWebMethod() {
-    let imageFromDb = await db.images.get(1);
-    //console.log(imageFromDb);   //obj
-    //console.log(JSON.stringify(imageFromDb));
-
-    PageMethods.set_path("Image.aspx");
-    PageMethods.SaveImageToFile(JSON.stringify(imageFromDb), onSucess, onError);
-    
-    function onSucess(result) {
-        clearIndexedDB();
-        checkIndexedDbData();
-        //alert(result);
-
-        const imageData = JSON.parse(result);
-        drawImage("imagesOutputArea", imageData);
-    }
-
-    function onError(err) {
-        console.log("Failure: ", err);
-    }
-
-    $("#btnGetImage").show(); 
-    $("#btnSaveImage").hide();
-}
 
 async function checkIndexedDbData() {
     await db.images.toArray()
-        .then(imageList => {
-            if (imageList.length === 0) {
+        .then(imageArray => {
+            if (imageArray.length === 0) {
                 $(".circle").css("background-color", "#68CF68");
             }
             else {
@@ -146,6 +115,46 @@ async function checkIndexedDbData() {
             console.log(err);
         });
 }
+
+function clearScreen() {
+    clearIndexedDB();
+    checkIndexedDbData();
+    $("#imagesInputArea .table .tbody .row").remove();
+    $("#imagesOutputArea .table .tbody .row").remove();
+}
+
+async function saveImageToServerUsingWebMethod() {
+    PageMethods.set_path("Image.aspx");
+
+    await db.images.toArray()
+        .then(imageArray => {
+            imageArray.forEach(image => {
+                //console.log('image to be sent to server:', image);
+                //console.log('image to be sent to server:', JSON.stringify(image));
+                //alert(JSON.stringify(image));
+                PageMethods.SaveImageToFile(JSON.stringify(image), onSucess, onError);
+
+                function onSucess(result) {
+                    drawImage("imagesOutputArea", JSON.parse(result));
+                    //alert(result);
+                }
+
+                function onError(err) {
+                    console.log("Failure: ", err);
+                }
+            });
+        })
+        .catch(err => {
+            console.log(err);
+        });
+
+    clearIndexedDB();
+    checkIndexedDbData();
+
+    $("#btnGetImage").show(); 
+    $("#btnSaveImage").hide();
+}
+
 
 /*TESTING AREA*/
 async function saveImageToServerUsingAJAX() {

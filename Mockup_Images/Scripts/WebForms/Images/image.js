@@ -1,5 +1,4 @@
 ﻿let db;
-let imagesArray = [];
 
 $(document).ready(function () {
     initServiceWorker();
@@ -8,28 +7,25 @@ $(document).ready(function () {
 });
 
 function initServiceWorker() {
-    if ("serviceWorker" in navigator) {
+    if ('serviceWorker' in navigator) {
         navigator.serviceWorker
-            .register("/Scripts/ServiceWorker/serviceWorker.js")
-            .then(res => console.log("service worker registered"))
-            .catch(err => console.log("service worker not registered", err));
+            .register('/Scripts/ServiceWorker/serviceWorker.js')
+            .then(res => console.log('service worker registered'))
+            .catch(err => console.log('service worker not registered', err));
     };
 }
 
-
 function initializeDB() {
-    console.log("db initiliazed");
-    db = new Dexie("db_test");
+    console.log('db initiliazed');
+    db = new Dexie('db_test');
     db.version(1).stores({
-        images: "id, createdDate, imageData",
+        images: '++id, createdDate, imageData',
     });
-
-    return db;
 }
 
 async function compressImage(event) {
     const imageFile = event.target.files[0];
-    console.log("originalFile instanceof Blob", imageFile instanceof Blob); // true
+    console.log('originalFile instanceof Blob', imageFile instanceof Blob); // true
     console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
     console.log(imageFile);
      
@@ -40,10 +36,7 @@ async function compressImage(event) {
     };
     try {
         const compressedImage = await imageCompression(imageFile, options);
-        console.log(
-            "compressedFile instanceof Blob",
-            compressedImage instanceof Blob
-        ); // true
+        console.log('compressedFile instanceof Blob', compressedImage instanceof Blob); // true
         console.log(`compressedFile size ${compressedImage.size / 1024 / 1024} MB`); // smaller than maxSizeMB
 
         await saveImageToIndexedDB(compressedImage); // write your own logic
@@ -53,34 +46,31 @@ async function compressImage(event) {
 }
 
 async function saveImageToIndexedDB(compressedImage) {
-    //console.log(compressedImage, compressedImage instanceof Blob);
-
     const reader = new FileReader();
     reader.readAsBinaryString(compressedImage);
 
     reader.onload = async function (e) {
         const bits = e.target.result;
-        // console.log(bits);
-        // console.log(btoa(bits));
 
-        const id = await db.images.put({
-            id: 1,
+        const id = await db.images.add({
             createdDate: Date.now(),
             imageData: btoa(bits),
         });
-        imagesArray.push(id);
-        console.log(imagesArray);
+        console.log(id);
         checkIndexedDbData();
     };
 }
 
 async function getImageFromIndexedDB() {
-    //console.log("get image from memory.", e);
-    const imageFromDb = await db.images.bulkGet(imagesArray); //.get(3);
-
-    $.each(imageFromDb, function (index, value) {
-        drawImage("imagesInputArea", value);
-    });
+    await db.images.toArray()
+        .then(imageList => {
+            imageList.forEach(image => {
+                drawImage('imagesInputArea', image);
+            });
+        })
+        .catch(err => {
+            console.log(err);
+        });
 
     $("#btnGetImage").hide();
     $("#btnSaveImage").show();
@@ -108,8 +98,6 @@ function clearIndexedDB() {
         .catch((err) => {
             console.log(err);
         });
-    imagesArray = [];
-    //console.log(imagesArray);
 }
 
 function clearScreen() {
@@ -145,18 +133,23 @@ async function saveImageToServerUsingWebMethod() {
 }
 
 async function checkIndexedDbData() {
-    const imageFromDb = await db.images.bulkGet(imagesArray);
-    console.log(imageFromDb);
-    if (imageFromDb.length === 0) {
-        $(".circle").css("background-color", "#68CF68");
-    }
-    else {
-        $(".circle").css("background-color", "#FFFF33");
-    }
+    await db.images.toArray()
+        .then(imageList => {
+            if (imageList.length === 0) {
+                $(".circle").css("background-color", "#68CF68");
+            }
+            else {
+                $(".circle").css("background-color", "#FFFF33");
+            }
+        })
+        .catch(err => {
+            console.log(err);
+        });
 }
 
+/*TESTING AREA*/
 async function saveImageToServerUsingAJAX() {
-    let imageFromDb = await db.images.get(1);
+    let imageFromDb = await db.images.toArray();
 
     const data = {
         data: imageFromDb,
